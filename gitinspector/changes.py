@@ -27,6 +27,7 @@ import subprocess
 import threading
 from .filtering import Filters, is_filtered, is_acceptable_file_name
 from . import format, git_utils, interval, terminal
+from enum import Enum
 
 CHANGES_PER_THREAD = 200
 NUM_THREADS = multiprocessing.cpu_count()
@@ -35,8 +36,19 @@ __thread_lock__ = threading.BoundedSemaphore(NUM_THREADS)
 __changes_lock__ = threading.Lock()
 
 
-class AuthorColors(object):
+class CommitType(Enum):
+    """
+    An enumeration class representing the different commit types
+    """
+    RELEVANT = "relevant"
+    FILTERED = "filtered"
+    MERGE = "merge"
 
+
+class AuthorColors(object):
+    """
+    A class providing different colors for the authors
+    """
     colors =  [
         "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
         "#8c564b", "#e377c2", "#5f5fdf", "#bcbd22", "#17becf",
@@ -120,22 +132,28 @@ class Commit(object):
                              is_filtered(commit.sha,    Filters.MESSAGE))
 
         if has_been_filtered:
-            return
+            commit.type = CommitType.FILTERED
+        elif not chunk: # Chunk is [], it is a pure merge
+            commit.type = CommitType.MERGE
+        else:
+            for line in chunk:
+                line = line.strip().\
+                    decode("unicode_escape", "ignore").\
+                    encode("latin-1", "replace").\
+                    decode("utf-8", "replace")
+                if FileDiff.is_filediff_line(line) and not has_been_filtered:
+                    file_name = FileDiff.get_filename(line)
+                    if is_acceptable_file_name(FileDiff.get_filename(line)):
+                        changes.files.append(file_name)
+                        found_valid_extension = True
+                        filediff = FileDiff(line)
+                        commit.add_filediff(filediff)
+            if found_valid_extension:
+                commit.type = CommitType.RELEVANT
+            else:
+                commit.type = CommitType.FILTERED
 
-        for line in chunk:
-            line = line.strip().\
-                decode("unicode_escape", "ignore").\
-                encode("latin-1", "replace").\
-                decode("utf-8", "replace")
-            if FileDiff.is_filediff_line(line) and not has_been_filtered:
-                file_name = FileDiff.get_filename(line)
-                if is_acceptable_file_name(FileDiff.get_filename(line)):
-                    changes.files.append(file_name)
-                    found_valid_extension = True
-                    filediff = FileDiff(line)
-                    commit.add_filediff(filediff)
-        if found_valid_extension:
-            bisect.insort(commits, commit)
+        bisect.insort(commits, commit)
 
     @staticmethod
     def get_alias(author, email, config):
@@ -290,6 +308,11 @@ class Changes(object):
 
     def get_commits(self):
         return self.commits
+
+    def relevant_commits(self):
+        return [ c for c in self.commits if c.type == CommitType.RELEVANT ]
+    def merge_commits(self):
+        return [ c for c in self.commits if c.type == CommitType.MERGE ]
 
     def update_dict_commit(self, dict, key, commit):
         if dict.get(key, None) is None:

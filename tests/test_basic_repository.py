@@ -212,8 +212,9 @@ class BasicFilteredRepositoryTest(unittest.TestCase):
                          ['Abraham Lincoln <abe@gov.us>', 'Andrew Johnson <jojo@gov.us>'])
 
         # Check the commits
-        self.assertEqual(len(r.changes.commits), 1)
-        authors = sorted(list(map(lambda c: c.author, r.changes.commits)))
+        rel_commits = r.changes.relevant_commits()
+        self.assertEqual(len(rel_commits), 1)
+        authors = sorted(list(map(lambda c: c.author, rel_commits)))
         self.assertEqual(authors[0], "Andrew Johnson")
 
         # Check the blames

@@ -99,5 +99,5 @@ def commit_chunks(hashes, since, until, try_hard):
     git_log_r.wait()
     git_log_r.stdout.close()
     chunks = [ list(g) for (k,g) in itertools.groupby(lines, key=lambda l: l==b'---\n') ]
-    chunks = list(filter(lambda g:len(g)>1, chunks)) # Strip merges
+    chunks = list(filter(lambda g: g[0] != b'---\n', chunks))
     return chunks

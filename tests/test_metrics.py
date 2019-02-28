@@ -24,7 +24,7 @@ import unittest
 import zipfile
 
 from gitinspector.gitinspector import Runner, FileWriter, filtering, interval, __parse_arguments__
-
+from gitinspector.changes import CommitType
 
 class MetricsTest(unittest.TestCase):
 
@@ -44,13 +44,18 @@ class MetricsTest(unittest.TestCase):
         # Launch runner
         r = Runner(opts, None)
         r.process()
-        self.assertEqual(len(r.changes.commits), 29)  # 29 commits + 2 merges
+        self.assertEqual(len(r.changes.commits), 31)  # 29 commits + 2 merges
+        self.assertEqual(len(r.changes.relevant_commits()), 29)
+        self.assertEqual(len(r.changes.merge_commits()), 2)
         b_commits = [c for c in r.changes.commits if c.author == "Bilbo Baggins"]
-        self.assertEqual(len(b_commits), 11)  # 11 commits + 1 merge
+        self.assertEqual(len(b_commits), 12)  # 11 commits + 1 merge
+        self.assertEqual(len([c for c in b_commits if c.type == CommitType.RELEVANT]), 11)
+        self.assertEqual(len([c for c in b_commits if c.type == CommitType.MERGE]), 1)
         f_commits = [c for c in r.changes.commits if c.author == "Frodo Baggins"]
         self.assertEqual(len(f_commits), 6)   # 6 commits
         s_commits = [c for c in r.changes.commits if c.author == "Samwise Gamgee"]
-        self.assertEqual(len(s_commits), 6)   # 6 commits + 1 merge
+        self.assertEqual(len(s_commits), 7)   # 6 commits + 1 merge
+        self.assertEqual(len([c for c in s_commits if c.type == CommitType.RELEVANT]), 6)
 
     def test_small_changes(self):
         opts = __parse_arguments__(args=['--silent', '--since=2015-10-20', '--until=2015-10-22',
@@ -60,9 +65,12 @@ class MetricsTest(unittest.TestCase):
         # Launch runner
         r = Runner(opts, None)
         r.process()
-        self.assertEqual(len(r.changes.commits), 4)  # 4 commits + 1 merge
+        self.assertEqual(len(r.changes.commits), 5)  # 4 commits + 1 merge
+        self.assertEqual(len(r.changes.relevant_commits()), 4)
         b_commits = [c for c in r.changes.commits if c.author == "Bilbo Baggins"]
-        self.assertEqual(len(b_commits), 3)  # 3 commits + 1 merge
+        self.assertEqual(len(b_commits), 4)  # 3 commits + 1 merge
+        self.assertEqual(len([c for c in b_commits if c.type == CommitType.RELEVANT]), 3)
+        self.assertEqual(len([c for c in b_commits if c.type == CommitType.MERGE]), 1)
         f_commits = [c for c in r.changes.commits if c.author == "Frodo Baggins"]
         self.assertEqual(len(f_commits), 0)  # 0 commits
         s_commits = [c for c in r.changes.commits if c.author == "Samwise Gamgee"]
