@@ -35,11 +35,12 @@ class TimelineOutput(Outputable):
         Outputable.__init__(self)
         self.changes = runner.changes
         self.useweeks = runner.config.weeks
-        self.display = bool(runner.changes.commits) and bool(runner.config.timeline) and bool(runner.config.legacy)
+        self.display = bool(runner.changes.all_commits()) and \
+            bool(runner.config.timeline) and bool(runner.config.legacy)
         self.out = runner.out
 
     def output_text(self):
-        if self.changes.get_commits():
+        if self.changes.all_commits():
             self.out.writeln("\n" + textwrap.fill(TIMELINE_INFO_TEXT() +
                                                   ":", width=terminal.get_size()[0]))
 
@@ -55,7 +56,7 @@ class TimelineOutput(Outputable):
     def output_html(self):
         timeline_xml = ""
 
-        if self.changes.get_commits():
+        if self.changes.all_commits():
             timeline_data = timeline.TimelineData(self.changes, self.useweeks)
 
             periods = timeline_data.get_periods()
@@ -77,7 +78,7 @@ class TimelineOutput(Outputable):
             ))
 
     def output_json(self):
-        if self.changes.get_commits():
+        if self.changes.all_commits():
             message_json = "\t\t\t\"message\": \"" + TIMELINE_INFO_TEXT() + "\",\n"
             timeline_json = ""
             periods_json = "\t\t\t\"period_length\": \"{0}\",\n".format("week" if self.useweeks else "month")
@@ -117,7 +118,7 @@ class TimelineOutput(Outputable):
                            "]\n\t\t}")
 
     def output_xml(self):
-        if self.changes.get_commits():
+        if self.changes.all_commits():
             message_xml = "\t\t<message>" + TIMELINE_INFO_TEXT() + "</message>\n"
             timeline_xml = ""
             periods_xml = "\t\t<periods length=\"{0}\">\n".format("week" if self.useweeks else "month")

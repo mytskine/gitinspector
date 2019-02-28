@@ -37,7 +37,7 @@ class FilteringOutput(Outputable):
 
     def __init__(self, runner):
         Outputable.__init__(self)
-        self.display = bool(runner.changes.commits)
+        self.display = bool(runner.changes.all_commits())
         self.out = runner.out
 
     @staticmethod

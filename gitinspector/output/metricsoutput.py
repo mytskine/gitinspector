@@ -46,7 +46,7 @@ class MetricsOutput(Outputable):
     def __init__(self, runner):
         Outputable.__init__(self)
         self.metrics = runner.metrics
-        self.display = bool(runner.changes.commits) and bool(runner.config.metrics)
+        self.display = bool(runner.changes.all_commits()) and bool(runner.config.metrics)
         self.out = runner.out
 
     def output_text(self):

@@ -68,8 +68,8 @@ class BasicRepositoryTest(unittest.TestCase):
                          ['Abraham Lincoln <abe@gov.us>', 'Andrew Johnson <jojo@gov.us>'])
 
         # Check the commits
-        self.assertEqual(len(r.changes.commits), 2)
-        authors = sorted(list(map(lambda c: c.author, r.changes.commits)))
+        self.assertEqual(len(r.changes.all_commits()), 2)
+        authors = sorted(list(map(lambda c: c.author, r.changes.all_commits())))
         self.assertEqual(authors[0], "Abraham Lincoln")
         self.assertEqual(authors[1], "Andrew Johnson")
 

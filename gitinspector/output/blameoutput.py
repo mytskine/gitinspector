@@ -40,7 +40,7 @@ class BlameOutput(Outputable):
         Outputable.__init__(self)
         self.changes = runner.changes
         self.blames = runner.blames
-        self.display = bool(self.changes.commits)
+        self.display = bool(self.changes.all_commits())
         self.out = runner.out
         self.progress = runner.config.progress
 

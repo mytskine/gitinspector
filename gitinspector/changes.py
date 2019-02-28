@@ -212,7 +212,7 @@ class ChangesThread(threading.Thread):
         for chunk in chunks:
             Commit.handle_diff_chunk(self.config, self.changes, commits, chunk)
 
-        self.changes.commits[self.offset // CHANGES_PER_THREAD] = commits
+        self.changes.__commits__[self.offset // CHANGES_PER_THREAD] = commits
         __changes_lock__.release() # ...to here.
         __thread_lock__.release() # Lock controlling the number of threads running
 
@@ -225,7 +225,7 @@ class Changes(object):
     @classmethod
     def empty(cls):
         changes = Changes.__new__(Changes)
-        changes.commits = []
+        changes.__commits__ = []
         changes.authors = {}
         changes.authors_dateinfo = {}
         changes.committers = {}
@@ -233,7 +233,7 @@ class Changes(object):
         return changes
 
     def __init__(self, repo, config):
-        self.commits = []
+        self.__commits__ = []
         self.authors = {}
         self.authors_dateinfo = {}
         self.committers = {}
@@ -250,7 +250,7 @@ class Changes(object):
                 progress_text = "[%s] " % repo.name + progress_text
 
             chunks = len(lines) // CHANGES_PER_THREAD
-            self.commits = [None] * (chunks if len(lines) % CHANGES_PER_THREAD == 0 else chunks + 1)
+            self.__commits__ = [None] * (chunks if len(lines) % CHANGES_PER_THREAD == 0 else chunks + 1)
             first_hash = ""
 
             for i, entry in enumerate(lines):
@@ -276,18 +276,18 @@ class Changes(object):
         for i in range(0, NUM_THREADS):
             __thread_lock__.release()
 
-        self.commits = [item for sublist in self.commits for item in sublist]
+        self.__commits__ = [item for sublist in self.__commits__ for item in sublist]
 
-        if self.commits:
+        if self.__commits__:
             if interval.has_interval(): # or self.config.branch != "master":
-                interval.set_ref(self.commits[-1].sha)
+                interval.set_ref(self.__commits__[-1].sha)
 
-            self.first_commit_date = datetime.date(int(self.commits[0].date[0:4]),
-                                                   int(self.commits[0].date[5:7]),
-                                                   int(self.commits[0].date[8:10]))
-            self.last_commit_date = datetime.date(int(self.commits[-1].date[0:4]),
-                                                  int(self.commits[-1].date[5:7]),
-                                                  int(self.commits[-1].date[8:10]))
+            self.first_commit_date = datetime.date(int(self.__commits__[0].date[0:4]),
+                                                   int(self.__commits__[0].date[5:7]),
+                                                   int(self.__commits__[0].date[8:10]))
+            self.last_commit_date = datetime.date(int(self.__commits__[-1].date[0:4]),
+                                                  int(self.__commits__[-1].date[5:7]),
+                                                  int(self.__commits__[-1].date[8:10]))
 
     def __iadd__(self, other):
         try:
@@ -295,10 +295,10 @@ class Changes(object):
             self.authors_dateinfo.update(other.authors_dateinfo)
             self.committers.update(other.committers)
 
-            for commit in other.commits:
-                bisect.insort(self.commits, commit)
-            if not self.commits and not other.commits:
-                self.commits = []
+            for commit in other.__commits__:
+                bisect.insort(self.__commits__, commit)
+            if not self.__commits__ and not other.__commits__:
+                self.__commits__ = []
 
             self.changes.files.update(other.files)
 
@@ -306,13 +306,12 @@ class Changes(object):
         except AttributeError:
             return other
 
-    def get_commits(self):
-        return self.commits
-
+    def all_commits(self):
+        return self.__commits__
     def relevant_commits(self):
-        return [ c for c in self.commits if c.type == CommitType.RELEVANT ]
+        return [ c for c in self.__commits__ if c.type == CommitType.RELEVANT ]
     def merge_commits(self):
-        return [ c for c in self.commits if c.type == CommitType.MERGE ]
+        return [ c for c in self.__commits__ if c.type == CommitType.MERGE ]
 
     def update_dict_commit(self, dict, key, commit):
         if dict.get(key, None) is None:
@@ -327,21 +326,21 @@ class Changes(object):
 
     def get_authorinfo_list(self):
         if not self.authors:
-            for i in self.commits:
+            for i in self.__commits__:
                 self.update_dict_commit(self.authors, (i.author, i.email), i)
 
         return copy.deepcopy(self.authors)
 
     def get_authordateinfo_list(self):
         if not self.authors_dateinfo:
-            for i in self.commits:
+            for i in self.__commits__:
                 self.update_dict_commit(self.authors_dateinfo, (i.date, (i.author, i.email)), i)
 
         return copy.deepcopy(self.authors_dateinfo)
 
     def authors_by_responsibilities(self):
         wrk = [((c.author, c.email), sum([f.insertions + f.deletions for f in c.filediffs]))
-               for c in self.commits]
+               for c in self.__commits__]
         aut = set([k[0] for k in wrk])
         res = sorted(aut,
                      key=lambda a: -sum([w for (b,w) in wrk if b == a]))

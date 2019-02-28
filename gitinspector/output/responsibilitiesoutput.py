@@ -37,7 +37,7 @@ class ResponsibilitiesOutput(Outputable):
         Outputable.__init__(self)
         self.changes = runner.changes
         self.blame = runner.blames
-        self.display = bool(runner.changes.commits) and bool(runner.config.responsibilities)
+        self.display = bool(runner.changes.all_commits()) and bool(runner.config.responsibilities)
         self.out = runner.out
 
     def output_text(self):
