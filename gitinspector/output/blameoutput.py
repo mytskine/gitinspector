@@ -34,9 +34,6 @@ class BlameOutput(Outputable):
     output_order = 200
 
     def __init__(self, runner):
-        if runner.config.progress and format.is_interactive_format():
-            print("")
-
         Outputable.__init__(self)
         self.changes = runner.changes
         self.blames = runner.blames

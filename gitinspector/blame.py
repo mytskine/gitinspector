@@ -144,7 +144,8 @@ class BlameThread(threading.Thread):
         __thread_lock__.release() # Lock controlling the number of threads running
 
 
-PROGRESS_TEXT = _("Checking how many rows belong to each author (2 of 2): {0:.0f}%")
+PROGRESS_TEXT_START = _("Starting the computation of the rows (2 of 2): {0:.0f}%")
+PROGRESS_TEXT_GOING = _("Checking how many rows belong to each author (2 of 2): {0:.0f}%")
 
 
 class Blame(object):
@@ -160,6 +161,9 @@ class Blame(object):
     def __init__(self, repo, changes, config):
         self.blames = {}
         self.config = config
+
+        if config.progress:
+            terminal.output_progress(PROGRESS_TEXT_START, 0, 1)
 
         if self.config.branch == "--all":
             # Apply an heuristic to compute the blames on all the
@@ -184,7 +188,7 @@ class Blame(object):
             lines = {l: self.config.branch for l in git_utils.files(config.branch)}
 
         if lines:
-            progress_text = _(PROGRESS_TEXT)
+            progress_text = _(PROGRESS_TEXT_GOING)
 
             if repo is not None:
                 progress_text = "[%s] " % repo.name + progress_text
@@ -206,7 +210,7 @@ class Blame(object):
                     thread.daemon = True
                     thread.start()
 
-                    if config.progress and format.is_interactive_format():
+                    if config.progress:
                         terminal.output_progress(progress_text, cpt, len(lines))
 
             # Make sure all threads have completed.

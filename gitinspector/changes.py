@@ -177,7 +177,8 @@ class AuthorInfo(object):
     commits = 0
 
 
-PROGRESS_TEXT = _("Fetching and calculating primary statistics (1 of 2): {0:.0f}%")
+PROGRESS_TEXT_START = _("Starting computing primary statistics (1 of 2): {0:.0f}%")
+PROGRESS_TEXT_GOING = _("Fetching and calculating primary statistics (1 of 2): {0:.0f}%")
 
 
 class Changes(object):
@@ -201,18 +202,25 @@ class Changes(object):
         self.config = config
 
         interval.set_ref("HEAD")
-
-        progress_text = _(PROGRESS_TEXT)
-        if repo is not None:
-            progress_text = "[%s] " % repo.name + progress_text
+        if config.progress:
+            terminal.output_progress(PROGRESS_TEXT_START, 0, 1)
 
         chunks =  git_utils.commit_chunks(self.config.branch, \
                                           interval.get_since(), interval.get_until(), \
                                           self.config.hard)
 
+        progress_text = _(PROGRESS_TEXT_GOING)
+        if repo is not None:
+            progress_text = "[%s] " % repo.name + progress_text
+
         commits = []
+        cpt = 0
         for chunk in chunks:
+            cpt += 1
             Commit.handle_diff_chunk(self.config, self, commits, chunk)
+            if config.progress:
+                terminal.output_progress(progress_text, cpt, len(commits))
+
         self.__commits__ = commits
 
         if self.__commits__:

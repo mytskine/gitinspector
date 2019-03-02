@@ -131,10 +131,13 @@ class Runner(object):
             if self.config.metrics:
                 self.metrics += MetricsLogic()
 
-            if self.config.progress and sys.stdout.isatty() and format.is_interactive_format():
+            if self.config.progress and sys.stdout.isatty():
                 terminal.clear_row()
 
         os.chdir(previous_directory)
+
+        if self.config.progress:
+            terminal.clear_row()
 
 
     def __output__(self):
@@ -148,6 +151,10 @@ class Runner(object):
         for out in outputable.Outputable.list():
             out(self).output()
         format.output_footer(self)
+
+        if self.config.progress:
+            print(terminal.ljust("", 80), end="")
+            terminal.clear_row()
 
         self.out.close()
 
@@ -267,7 +274,7 @@ def __parse_arguments__(args=None):
     if (unknown):
         error("%s: Unknown option" % unknown[0])
 
-    options.progress = True  # Display progress messages
+    options.progress = not(options.silent)  # Display progress messages
 
     if options.grading:
         options.metrics = True
