@@ -34,7 +34,7 @@ class MetricsTest(unittest.TestCase):
         zip_ref.close()
 
     def tearDown(self):
-        pass
+        shutil.rmtree("build/tests/trie-repository")
 
     def test_all_changes(self):
         opts = __parse_arguments__(args=['--silent',
