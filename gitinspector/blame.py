@@ -173,8 +173,8 @@ class Blame(object):
             lines = {} # Associates files to branch
             times = {} # Associates files to time
             for b in branches:
-                # for f in git_utils.files(b):
-                for f in changes.files:
+                for f in git_utils.files(b):
+                # for f in changes.files:
                     if f in lines:
                         if not(f in times):
                             times[f] = git_utils.last_commit(lines[f], f)
