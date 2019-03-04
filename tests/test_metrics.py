@@ -26,7 +26,53 @@ import zipfile
 from gitinspector.gitinspector import Runner, FileWriter, filtering, interval, __parse_arguments__
 from gitinspector.changes import CommitType
 
-class MetricsTest(unittest.TestCase):
+
+class MetricsBasicTest(unittest.TestCase):
+
+    def setUp(self):
+        zip_ref = zipfile.ZipFile("tests/resources/basic-repository.zip", 'r')
+        zip_ref.extractall("build/tests")
+        zip_ref.close()
+
+    def tearDown(self):
+        shutil.rmtree("build/tests/basic-repository")
+
+    def test_all_changes(self):
+        opts = __parse_arguments__(args=['--silent',
+                                         'build/tests/basic-repository'])
+        opts.progress = False
+
+        # Launch runner
+        r = Runner(opts, None)
+        r.process()
+        self.assertEqual(len(r.changes.all_commits()), 6)  # 6 commits, no merges
+        self.assertEqual(len(r.changes.relevant_commits()), 6)
+        self.assertEqual(len(r.changes.merge_commits()), 0)
+        l_commits = [c for c in r.changes.all_commits() if c.author == "Abraham Lincoln"]
+        self.assertEqual(len(l_commits), 3)  # 3 commits
+        j_commits = [c for c in r.changes.all_commits() if c.author == "Andrew Johnson"]
+        self.assertEqual(len(l_commits), 3)  # 3 commits
+
+    def test_master_changes(self):
+        opts = __parse_arguments__(args=['--silent',
+                                         '--branch', 'master',
+                                         'build/tests/basic-repository'])
+        opts.progress = False
+
+        # Launch runner
+        r = Runner(opts, None)
+        r.process()
+        self.assertEqual(len(r.changes.all_commits()), 4)  # 4 commits, no merges
+        self.assertEqual(len(r.changes.relevant_commits()), 4)
+        self.assertEqual(len(r.changes.merge_commits()), 0)
+        l_commits = [c for c in r.changes.all_commits() if c.author == "Abraham Lincoln"]
+        self.assertEqual(len(l_commits), 1)  # 1 commits
+        j_commits = [c for c in r.changes.all_commits() if c.author == "Andrew Johnson"]
+        self.assertEqual(len(j_commits), 3)  # 3 commits
+
+
+
+class MetricsTrieTest(unittest.TestCase):
 
     def setUp(self):
         zip_ref = zipfile.ZipFile("tests/resources/trie-repository.zip", 'r')

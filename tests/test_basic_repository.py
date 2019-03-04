@@ -64,11 +64,13 @@ class BasicRepositoryTest(unittest.TestCase):
         self.assertEqual(len(r.repos), 1)
         self.assertEqual(r.repos[0].name, "basic-repository")
         self.assertTrue(r.repos[0].location.endswith("build/tests/basic-repository"))
-        self.assertEqual(r.repos[0].authors(),
+        authors = r.repos[0].authors()
+        authors.sort()
+        self.assertEqual(authors,
                          ['Abraham Lincoln <abe@gov.us>', 'Andrew Johnson <jojo@gov.us>'])
 
         # Check the commits
-        self.assertEqual(len(r.changes.all_commits()), 2)
+        self.assertEqual(len(r.changes.all_commits()), 4)
         authors = sorted(list(map(lambda c: c.author, r.changes.all_commits())))
         self.assertEqual(authors[0], "Abraham Lincoln")
         self.assertEqual(authors[1], "Andrew Johnson")
@@ -78,8 +80,8 @@ class BasicRepositoryTest(unittest.TestCase):
         blame_keys = sorted(list(r.blames.blames.keys()))
         self.assertEqual(blame_keys[0], (('Abraham Lincoln', 'abe@gov.us'), 'README.txt'))
         self.assertEqual(blame_keys[1], (('Andrew Johnson', 'jojo@gov.us'), 'file.c'))
-        self.assertEqual(r.blames.blames[blame_keys[0]].rows, 1) # README.txt is 1 line long
-        self.assertEqual(r.blames.blames[blame_keys[1]].rows, 6) # main.c     is 6 lines long
+        self.assertEqual(r.blames.blames[blame_keys[0]].rows, 1)  # README.txt is 1  line long
+        self.assertEqual(r.blames.blames[blame_keys[1]].rows, 40) # main.c     is 40 lines long
 
         # Check the metrics
         self.assertEqual(r.metrics.eloc, {}) # Both files are too short, no metrics to report
@@ -208,12 +210,16 @@ class BasicFilteredRepositoryTest(unittest.TestCase):
         self.assertEqual(len(r.repos), 1)
         self.assertEqual(r.repos[0].name, "basic-repository")
         self.assertTrue(r.repos[0].location.endswith("build/tests/basic-repository"))
-        self.assertEqual(r.repos[0].authors(),
+        authors = r.repos[0].authors()
+        authors.sort()
+        self.assertEqual(authors,
                          ['Abraham Lincoln <abe@gov.us>', 'Andrew Johnson <jojo@gov.us>'])
 
         # Check the commits
         rel_commits = r.changes.relevant_commits()
-        self.assertEqual(len(rel_commits), 1)
+        self.assertEqual(len(rel_commits), 2) # 2 commits, 2 excluded
+        all_commits = r.changes.all_commits()
+        self.assertEqual(len(all_commits), 4) # 2 commits, 2 excluded
         authors = sorted(list(map(lambda c: c.author, rel_commits)))
         self.assertEqual(authors[0], "Andrew Johnson")
 
@@ -221,7 +227,7 @@ class BasicFilteredRepositoryTest(unittest.TestCase):
         self.assertEqual(len(r.blames.blames.keys()), 1)
         blame_keys = sorted(list(r.blames.blames.keys()))
         self.assertEqual(blame_keys[0], (('Andrew Johnson', 'jojo@gov.us'), 'file.c'))
-        self.assertEqual(r.blames.blames[blame_keys[0]].rows, 6) # main.c is 6 lines long
+        self.assertEqual(r.blames.blames[blame_keys[0]].rows, 40) # main.c is 40 lines long
 
         # Check the metrics
         self.assertEqual(r.metrics.eloc, {}) # Both files are too short, no metrics to report
