@@ -31,6 +31,30 @@ A full [Documentation](https://github.com/ejwa/gitinspector/wiki/Documentation) 
   * Supports HTML, JSON, XML and plain text output (console).
   * Can report violations of different code metrics.
 
+### Usage
+
+Syntax:
+```{bash}
+gitinspector.py --help
+```
+
+Basic usage with a plain text output:
+```{bash}
+gitinspector.py
+```
+
+Advanced usage with a HTML output:
+```{bash}
+gitinspector.py \
+ --since 2018-03-01 \
+ --exclude file_out:libraries/,file_out:^vendor/,file_out:zwibbler2,file_out:jstree \
+ --file-types "*.css,*.js,*.php,*.sql" \
+ --branch master \
+ --grading \
+ --format=html \
+ > gitinspector.html
+```
+
 ### Example outputs
 Below are some example outputs for a number of famous open source projects. All the statistics were generated using the *"-HTlrm"* flags.
 
