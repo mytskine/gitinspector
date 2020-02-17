@@ -76,14 +76,16 @@ class ResponsibilitiesOutput(Outputable):
                         "width='16' height='16' fill='{0}'></rect></svg>").\
                         format(color)
 
-                resp_xml += "<td style='text-align:left; width:25%'>{0} &nbsp; {1}</td><td>".\
+                resp_xml += "<td class=\"type-user\" style='width:25%'>{0} &nbsp; {1}</td><td>".\
                     format(rect, committer[0])
 
+                resp_xml += "<table class=\"responsibility-files\">"
                 for i, entry in enumerate(responsibilities):
-                    resp_xml += "<div style='padding:0px'>" + \
-                        entry[1] + " (" + str(entry[0]) + " eloc)</div>"
+                    resp_xml += "<tr><td class=\"type-path\">" + \
+                        entry[1] + "</td><td class=\"type-numeric\">" + str(entry[0]) + " eloc</td></tr>"
                     if i > 9:
                         break
+                resp_xml += "</table>"
                 resp_xml += "</td></tr>"
 
         resp_xml += "</table>"

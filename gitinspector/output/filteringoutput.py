@@ -71,7 +71,7 @@ class FilteringOutput(Outputable):
                     rect  = ("<svg width='16' height='16'><rect x='5' y='5' "
                              "width='16' height='16' fill='{0}'></rect></svg>").\
                              format(color)
-                    other_files += "<tr class='{0}'><td style='text-align:left'>{1} {2}</td><td>{3}</td></tr>".\
+                    other_files += "<tr class='{0}'><td class=\"type-user\">{1} {2}</td><td class=\"type-path\">{3}</td></tr>".\
                         format(par, rect, committer[0], ", ".join(files))
             other_files += "</table>"
 

@@ -63,7 +63,7 @@ function generate_sortable_table(id, titles, data, filter) {
         .attr("width", 30).attr("height", 30)
         .append("rect")
         .attr("x", 5).attr("y", 5)
-        .attr("width", 15).attr("height", 15)
+        .attr("width", 20).attr("height", 20)
         .attr("fill", function(d,i) { return d.color; });
 
     // Hide authors with minimal involvement

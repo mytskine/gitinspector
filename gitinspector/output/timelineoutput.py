@@ -198,9 +198,9 @@ class TimelineOutput(Outputable):
                 timeline_xml += "<tr" + (" class=\"odd\">" if i % 2 == 1 else ">")
 
                 if format.get_selected() == "html":
-                    timeline_xml += "<td><img src=\"{0}\"/>{1}</td>".format(gravatar.get_url(name[1]), name[0])
+                    timeline_xml += "<td class=\"type-user\"><img src=\"{0}\"/>{1}</td>".format(gravatar.get_url(name[1]), name[0])
                 else:
-                    timeline_xml += "<td>" + name[0] + "</td>"
+                    timeline_xml += "<td class=\"type-user\">" + name[0] + "</td>"
 
                 for period in periods:
                     multiplier = timeline_data.get_multiplier(period, 18)
