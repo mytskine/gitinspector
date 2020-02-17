@@ -68,11 +68,10 @@ function generate_sortable_table(id, titles, data, filter) {
 
     // Hide authors with minimal involvement
     var filtered_lines = lines.filter(function (d) { return !filter(d); });
-    filtered_lines.style("display", "none");
-    recolor_table_rows(id);
 
     // Display these same authors when clicking on footer
-    if (filtered_lines.size() > 0) {
+    if (filtered_lines.size() > 1) {
+        filtered_lines.style("display", "none");
         var th = d3.select("table#" + id + " tfoot tr th");
         var th_txt = "Display minor authors (" + filtered_lines.size() + ")";
         th.text(th_txt);
@@ -90,6 +89,7 @@ function generate_sortable_table(id, titles, data, filter) {
             }
         });
     }
+    recolor_table_rows(id);
 
     // Make the columns sortable
     d3.selectAll("table#" + id + " tr th").data(titles).on("click", function(d) {
