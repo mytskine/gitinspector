@@ -21,6 +21,7 @@ import fnmatch
 import re
 from . import git_utils
 from enum import Enum
+import os
 
 # TODO: We definitely need to rewrite the 'filtering' module to be part
 # of the Runner context and NOT BEING GLOBAL! (for our own sake!)...
@@ -36,6 +37,10 @@ class Filters(Enum):
     REVISION = "revision"
     MESSAGE  = "message"
 
+"""
+The first set containes compiled regexps.
+The second set contains matching strings.
+"""
 __filters__ = {
     Filters.FILE_IN:  [set(), set()],
     Filters.FILE_OUT: [set(), set()],
@@ -50,16 +55,24 @@ class InvalidRegExpError(ValueError):
         super(InvalidRegExpError, self).__init__(msg)
         self.msg = msg
 
-def __add_one_filter__(string,filter_type=Filters.FILE_IN):
+def __add_one_filter__(string,is_globbing=False):
     """
     Function that takes a string and records the corresponding filter
     inside __filters__.
+    Syntax: <filter_prefix>:<globbing_pattern>
     """
+    split_rule = string.strip().split(":")
+    if len(split_rule) != 2:
+        raise ValueError("Invalid filter : %s"%string)
     for filter in Filters:
-        if string.startswith(filter.value):
-            __filters__[filter][0].add(string[len(filter.value) + 1:])
+        if filter.value == split_rule[0]:
+            if is_globbing:
+                pattern = fnmatch.translate(split_rule[1])
+            else:
+                pattern = split_rule[1]
+            __filters__[filter][0].add(re.compile(pattern))
             return
-    __filters__[Filters.FILE_IN][0].add(string)
+    raise ValueError("Invalid filter : %s"%string)
 
 def add_filters(string):
     """
@@ -68,17 +81,8 @@ def add_filters(string):
     somehow, the filter is automatically Filters.FILE_IN".
     """
     rules = string.split(",")
-    filter_names = [filter.value for filter in Filters]
     for rule in rules:
-        split_rule = rule.split(":")
-        if (len(split_rule) == 1):
-            __add_one_filter__(rule)
-        else:
-            filter_name = split_rule[0]
-            if not(filter_name in filter_names):
-                raise ("Invalid filter : %s"%filter_name)
-            else:
-                __add_one_filter__(rule, Filters(filter_name))
+        __add_one_filter__(rule)
 
 def clear():
     for filter in Filters:
@@ -118,7 +122,7 @@ def is_filtered(string, filter_type):
             search_for = string
 
         try:
-            if re.search(regexp, search_for) is not None:
+            if regexp.search(search_for) is not None:
                 if filter_type == Filters.MESSAGE:
                     __add_one_filter__("revision:" + string) # ??
                 else:
@@ -137,21 +141,26 @@ def is_acceptable_file_name(string):
     must not belong to any negative check (in FILE_OUT)
     """
     search_for = string.strip()
-    accepted = False
-    for regexp in __filters__[Filters.FILE_IN][0]:
-        try:
-            if fnmatch.fnmatch(search_for, regexp):
-                accepted = True
-                break
-        except:
-            raise InvalidRegExpError(_("Invalid regular expression specified"))
-    if not(accepted):
+    if not(_matches_filter(search_for, Filters.FILE_IN)):
         return False
-    for regexp in __filters__[Filters.FILE_OUT][0]:
-        try:
-            if fnmatch.fnmatch(search_for, regexp):
-                __filters__[Filters.FILE_OUT][1].add(string)
-                return False
-        except:
-            raise InvalidRegExpError(_("Invalid regular expression specified"))
+    if _matches_filter(search_for, Filters.FILE_OUT):
+        __filters__[Filters.FILE_OUT][1].add(_find_excluded_top_dir(search_for))
+        return False
     return True
+
+def _matches_filter(string, filter):
+    try:
+        for regexp in __filters__[filter][0]:
+            if regexp.search(string) is not None:
+                return True
+    except:
+        raise InvalidRegExpError(_("Invalid regular expression specified"))
+    return False
+
+def _find_excluded_top_dir(path):
+    previous_path = path
+    new_path = os.path.dirname(path)
+    while len(new_path) > 0 and _matches_filter(new_path + "/", Filters.FILE_OUT):
+        previous_path = new_path
+        new_path = os.path.dirname(new_path)
+    return previous_path

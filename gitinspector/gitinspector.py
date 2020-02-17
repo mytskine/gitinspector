@@ -90,7 +90,7 @@ class Runner(object):
             for pat in config.exclude:
                 filtering.add_filters(pat)
         for f in config.file_types.split(','):
-            filtering.__add_one_filter__(f)
+            filtering.__add_one_filter__("file_in:" + f, True)
 
         # Initialize a list of Repository objects
         self.repos = __get_validated_git_repos__(config)
@@ -224,8 +224,8 @@ def __parse_arguments__(args=None):
     parser.add_argument('-d', '--debug-mode', action='store_true', help=
                         _("displays some debug messages"))
     parser.add_argument('-f', '--file-types', metavar='TYPES', help=
-                        _("a comma separated list of file extensions to include when "
-                          "computing statistics. The default extensions used are: ") +
+                        _("a comma separated list of globbing patterns to include when "
+                          "computing statistics. The default patterns used are: ") +
                         str(DEFAULT_EXTENSIONS) + " " +
                         _("Specifying * includes files with no extension, while ** includes all files"),
                         default=",".join(DEFAULT_EXTENSIONS))
@@ -274,7 +274,7 @@ def __parse_arguments__(args=None):
     parser.add_argument('-W', '--ignore-space', action='store_true', help=
                         _("add 'ignore-all-space' option to git commands"))
     parser.add_argument('-x', '--exclude', metavar='PATTERN', action='append', help=
-                        _("an exclusion pattern of the form KEY:PAT, describing the file paths, "
+                        _("an exclusion pattern of the form KEY:REGEXPAT, describing the file paths, "
                           "revisions, revisions with certain commit messages, author names or "
                           "author emails that should be excluded from the statistics; KEY must "
                           "be in: ") + str([ f.name.lower() for f in Filters ]))
