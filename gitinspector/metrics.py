@@ -29,7 +29,7 @@ __metric_eloc__ = {
 }
 
 __metric_cc_tokens__ = [
-    [["java", "js", "c", "cc", "cpp"],
+    [["java", "js", "c", "cc", "cpp", "php"],
      ["else", r"for\s+\(.*\)", r"if\s+\(.*\)", r"case\s+\w+:",
       "default:", r"while\s+\(.*\)"],
      ["assert", "break", "continue", "return"]],

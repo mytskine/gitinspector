@@ -50,6 +50,7 @@ class FileType(Enum):
     JAVA   = auto()
     JAVASCRIPT = auto()
     OCAML  = auto()
+    PHP    = auto()
     PYTHON = auto()
     RUBY   = auto()
     RUST   = auto()
@@ -85,6 +86,7 @@ class FileType(Enum):
         "md"       : TXT,
         "ml"       : OCAML,
         "mli"      : OCAML,
+        "php"      : PHP,
         "py"       : PYTHON,
         "Rakefile" : BUILD,
         "README"   : TXT,
